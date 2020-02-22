@@ -39,7 +39,6 @@ public class ListViewActivity extends AppCompatActivity {
         sharedPref = getSharedPreferences(SP_NAME, MODE_PRIVATE);
 
         largeText = sharedPref.getString(KEY_LARGE_TEXT, null);
-
         if (largeText == null) {
             largeText = getString(R.string.large_text);
             sharedPref
@@ -48,10 +47,28 @@ public class ListViewActivity extends AppCompatActivity {
                     .apply();
         }
 
-        simpleAdapterContent = prepareContent(largeText);
+        prepareContent(largeText);
 
-        listContentAdapter = createAdapter(simpleAdapterContent);
+        createAdapter();
 
+        initListView();
+
+        initSwipeLayout();
+    }
+
+    private void initSwipeLayout() {
+        swipeLayout = findViewById(R.id.swipe_container);
+        swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                prepareContent(sharedPref.getString(KEY_LARGE_TEXT, null));
+                listContentAdapter.notifyDataSetChanged();
+                swipeLayout.setRefreshing(false);
+            }
+        });
+    }
+
+    private void initListView() {
         listView = findViewById(R.id.list);
 
         listView.setAdapter(listContentAdapter);
@@ -63,39 +80,28 @@ public class ListViewActivity extends AppCompatActivity {
                 listContentAdapter.notifyDataSetChanged();
             }
         });
-
-        swipeLayout = findViewById(R.id.swipe_container);
-        swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                simpleAdapterContent = prepareContent(sharedPref.getString(KEY_LARGE_TEXT, null));
-                listContentAdapter = createAdapter(simpleAdapterContent);
-                listView.setAdapter(listContentAdapter);
-                //listContentAdapter.notifyDataSetChanged();
-                swipeLayout.setRefreshing(false);
-            }
-        });
     }
 
     @NonNull
-    private BaseAdapter createAdapter(List<Map<String, String>> listContent) {
-        SimpleAdapter adapter = new SimpleAdapter(this, listContent, R.layout.list_item,
+    private void createAdapter() {
+        listContentAdapter = new SimpleAdapter(this, simpleAdapterContent, R.layout.list_item,
                 new String[]{"paragraph", "number"}, new int[]{R.id.paragraph, R.id.number});
-        return adapter;
     }
 
     @NonNull
-    private List<Map<String, String>> prepareContent(String largeText) {
-        String[] sourceStrings = largeText.split("\n\n");
+    private void prepareContent(String value) {
+        String[] sourceStrings = value.split("\n\n");
 
-        List<Map<String, String>> list = new ArrayList<>();
+        if (!simpleAdapterContent.isEmpty()) {
+            simpleAdapterContent.clear();
+        }
 
         for (int i = 0; i < sourceStrings.length; i++) {
             Map<String, String> curValue = new HashMap<>();
             curValue.put("paragraph", sourceStrings[i]);
             curValue.put("number", String.valueOf(sourceStrings[i].length()));
-            list.add(curValue);
+            simpleAdapterContent.add(curValue);
         }
-        return list;
+
     }
 }
