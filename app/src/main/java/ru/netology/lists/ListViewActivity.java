@@ -24,8 +24,10 @@ public class ListViewActivity extends AppCompatActivity {
 
     private SharedPreferences sharedPref;
     private String largeText;
-    private List<Map<String, String>> listContent = new ArrayList<>();
+    private List<Map<String, String>> simpleAdapterContent = new ArrayList<>();
     private SwipeRefreshLayout swipeLayout;
+    private BaseAdapter listContentAdapter;
+    private ListView listView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,32 +48,33 @@ public class ListViewActivity extends AppCompatActivity {
                     .apply();
         }
 
-        listContent = prepareContent(largeText);
+        simpleAdapterContent = prepareContent(largeText);
 
-        ListView listView = findViewById(R.id.list);
+        listContentAdapter = createAdapter(simpleAdapterContent);
 
-        final BaseAdapter listContentAdapter = createAdapter(listContent);
+        listView = findViewById(R.id.list);
 
         listView.setAdapter(listContentAdapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                listContent.remove(i);
+                simpleAdapterContent.remove(i);
                 listContentAdapter.notifyDataSetChanged();
             }
         });
 
-/*        swipeLayout = findViewById(R.id.swiperefresh);
+        swipeLayout = findViewById(R.id.swipe_container);
         swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            // Будет вызван, когда пользователь потянет список вниз
             @Override
             public void onRefresh() {
-                listContent = prepareContent(sharedPref.getString(KEY_LARGE_TEXT, null));
-                listContentAdapter.notifyDataSetChanged();
+                simpleAdapterContent = prepareContent(sharedPref.getString(KEY_LARGE_TEXT, null));
+                listContentAdapter = createAdapter(simpleAdapterContent);
+                listView.setAdapter(listContentAdapter);
+                //listContentAdapter.notifyDataSetChanged();
                 swipeLayout.setRefreshing(false);
             }
-        });*/
+        });
     }
 
     @NonNull
